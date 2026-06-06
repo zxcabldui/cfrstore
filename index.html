@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CFR Store</title>
+    <!-- Подключение Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Подключение Tailwind CSS для быстрой стилизации -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: var(--tg-theme-bg-color, #f3f4f6);
+            color: var(--tg-theme-text-color, #1f2937);
+        }
+        .card {
+            background-color: var(--tg-theme-secondary-bg-color, #ffffff);
+        }
+    </style>
+</head>
+<body class="p-4 font-sans antialiased pb-24">
+
+    <!-- Шапка -->
+    <header class="mb-6 text-center">
+        <h1 class="text-2xl font-bold tracking-wide">CFR STORE</h1>
+        <p class="text-sm opacity-70">Каталог одежды</p>
+    </header>
+
+    <!-- Список товаров -->
+    <div class="grid grid-cols-2 gap-4" id="catalog">
+        <!-- Товар 1 -->
+        <div class="card p-3 rounded-2xl shadow-sm flex flex-col justify-between border border-gray-100 dark:border-gray-800">
+            <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=300&auto=format&fit=crop" alt="Худи" class="w-full h-32 object-cover rounded-xl mb-2">
+            <div>
+                <h3 class="font-semibold text-sm">Худи CFR "Classic"</h3>
+                <p class="text-sm font-bold mt-1 text-indigo-600 dark:text-indigo-400">4 500 ₽</p>
+            </div>
+            <button onclick="addToCart('Худи CFR Classic', 4500)" class="w-full mt-3 bg-black text-white py-2 rounded-xl text-xs font-semibold active:scale-95 transition-transform">
+                В корзину
+            </button>
+        </div>
+
+        <!-- Товар 2 -->
+        <div class="card p-3 rounded-2xl shadow-sm flex flex-col justify-between border border-gray-100 dark:border-gray-800">
+            <img src="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=300&auto=format&fit=crop" alt="Футболка" class="w-full h-32 object-cover rounded-xl mb-2">
+            <div>
+                <h3 class="font-semibold text-sm">Футболка "Oversize"</h3>
+                <p class="text-sm font-bold mt-1 text-indigo-600 dark:text-indigo-400">2 200 ₽</p>
+            </div>
+            <button onclick="addToCart('Футболка Oversize', 2200)" class="w-full mt-3 bg-black text-white py-2 rounded-xl text-xs font-semibold active:scale-95 transition-transform">
+                В корзину
+            </button>
+        </div>
+
+        <!-- Товар 3 -->
+        <div class="card p-3 rounded-2xl shadow-sm flex flex-col justify-between border border-gray-100 dark:border-gray-800">
+            <img src="https://images.unsplash.com/photo-1588850561407-ed78c282e89b?q=80&w=300&auto=format&fit=crop" alt="Кепка" class="w-full h-32 object-cover rounded-xl mb-2">
+            <div>
+                <h3 class="font-semibold text-sm">Кепка CFR "Base"</h3>
+                <p class="text-sm font-bold mt-1 text-indigo-600 dark:text-indigo-400">1 500 ₽</p>
+            </div>
+            <button onclick="addToCart('Кепка CFR Base', 1500)" class="w-full mt-3 bg-black text-white py-2 rounded-xl text-xs font-semibold active:scale-95 transition-transform">
+                В корзину
+            </button>
+        </div>
+    </div>
+
+    <!-- Блок корзины (скрыт по умолчанию) -->
+    <div id="cart-section" class="mt-6 p-4 rounded-2xl card border border-gray-100 dark:border-gray-800 hidden">
+        <h2 class="text-lg font-bold mb-3">Ваша корзина</h2>
+        <div id="cart-items" class="space-y-2 text-sm mb-3"></div>
+        <div class="border-t pt-2 flex justify-between font-bold text-sm">
+            <span>Итого:</span>
+            <span id="cart-total">0 ₽</span>
+        </div>
+    </div>
+
+    <script>
+        // Инициализация Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Расширяем приложение на весь экран
+
+        let cart = [];
+
+        function addToCart(name, price) {
+            // Ищем, есть ли товар уже в корзине
+            const itemIndex = cart.findIndex(item => item.name === name);
+            if (itemIndex > -1) {
+                cart[itemIndex].quantity += 1;
+            } else {
+                cart.push({ name, price, quantity: 1 });
+            }
+            updateCart();
+        }
+
+        function updateCart() {
+            const cartSection = document.getElementById('cart-section');
+            const cartItemsContainer = document.getElementById('cart-items');
+            const cartTotalContainer = document.getElementById('cart-total');
+
+            if (cart.length === 0) {
+                cartSection.classList.add('hidden');
+                tg.MainButton.hide();
+                return;
+            }
+
+            cartSection.classList.remove('hidden');
+            cartItemsContainer.innerHTML = '';
+            
+            let total = 0;
+            cart.forEach((item, index) => {
+                total += item.price * item.quantity;
+                cartItemsContainer.innerHTML += `
+                    <div class="flex justify-between items-center">
+                        <span>${item.name} (${item.quantity} шт.)</span>
+                        <div class="flex items-center gap-2">
+                            <span>${item.price * item.quantity} ₽</span>
+                            <button onclick="removeFromCart(${index})" class="text-red-500 font-bold px-1">×</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            cartTotalContainer.innerText = `${total} ₽`;
+
+            // Настройка и отображение главной кнопки Telegram для оплаты
+            tg.MainButton.setText(`Оформить заказ (${total} ₽)`);
+            tg.MainButton.show();
+        }
+
+        function removeFromCart(index) {
+            cart[index].quantity -= 1;
+            if (cart[index].quantity <= 0) {
+                cart.splice(index, 1);
+            }
+            updateCart();
+        }
+
+        // Обработка клика по главной кнопке Telegram
+        tg.onEvent('mainButtonClicked', function() {
+            // Отправляем данные корзины обратно в бот
+            tg.sendData(JSON.stringify(cart));
+        });
+    </script>
+</body>
+</html>
