@@ -6,7 +6,7 @@
     <title>CFR Store</title>
     <!-- Подключение Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Подключение Tailwind CSS для быстрой стилизации -->
+    <!-- Подключение Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -20,50 +20,16 @@
 </head>
 <body class="p-4 font-sans antialiased pb-24">
 
-    <!-- Шапка -->
-    <header class="mb-6 text-center">
+    <!-- Шапка с вашим логотипом -->
+    <header class="mb-6 text-center flex flex-col items-center justify-center">
+        <!-- Ссылка на логотип в вашем репозитории -->
+        <img src="logo.jpg" alt="CFR Store Logo" class="w-24 h-24 rounded-full object-cover shadow-md mb-3 border-2 border-black">
         <h1 class="text-2xl font-bold tracking-wide">CFR STORE</h1>
-        <p class="text-sm opacity-70">Каталог одежды</p>
+        <p class="text-sm opacity-70">Официальный магазин одежды</p>
     </header>
 
-    <!-- Список товаров -->
-    <div class="grid grid-cols-2 gap-4" id="catalog">
-        <!-- Товар 1 -->
-        <div class="card p-3 rounded-2xl shadow-sm flex flex-col justify-between border border-gray-100 dark:border-gray-800">
-            <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=300&auto=format&fit=crop" alt="Худи" class="w-full h-32 object-cover rounded-xl mb-2">
-            <div>
-                <h3 class="font-semibold text-sm">Худи CFR "Classic"</h3>
-                <p class="text-sm font-bold mt-1 text-indigo-600 dark:text-indigo-400">4 500 ₽</p>
-            </div>
-            <button onclick="addToCart('Худи CFR Classic', 4500)" class="w-full mt-3 bg-black text-white py-2 rounded-xl text-xs font-semibold active:scale-95 transition-transform">
-                В корзину
-            </button>
-        </div>
-
-        <!-- Товар 2 -->
-        <div class="card p-3 rounded-2xl shadow-sm flex flex-col justify-between border border-gray-100 dark:border-gray-800">
-            <img src="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=300&auto=format&fit=crop" alt="Футболка" class="w-full h-32 object-cover rounded-xl mb-2">
-            <div>
-                <h3 class="font-semibold text-sm">Футболка "Oversize"</h3>
-                <p class="text-sm font-bold mt-1 text-indigo-600 dark:text-indigo-400">2 200 ₽</p>
-            </div>
-            <button onclick="addToCart('Футболка Oversize', 2200)" class="w-full mt-3 bg-black text-white py-2 rounded-xl text-xs font-semibold active:scale-95 transition-transform">
-                В корзину
-            </button>
-        </div>
-
-        <!-- Товар 3 -->
-        <div class="card p-3 rounded-2xl shadow-sm flex flex-col justify-between border border-gray-100 dark:border-gray-800">
-            <img src="https://images.unsplash.com/photo-1588850561407-ed78c282e89b?q=80&w=300&auto=format&fit=crop" alt="Кепка" class="w-full h-32 object-cover rounded-xl mb-2">
-            <div>
-                <h3 class="font-semibold text-sm">Кепка CFR "Base"</h3>
-                <p class="text-sm font-bold mt-1 text-indigo-600 dark:text-indigo-400">1 500 ₽</p>
-            </div>
-            <button onclick="addToCart('Кепка CFR Base', 1500)" class="w-full mt-3 bg-black text-white py-2 rounded-xl text-xs font-semibold active:scale-95 transition-transform">
-                В корзину
-            </button>
-        </div>
-    </div>
+    <!-- Список товаров (заполняется автоматически из списка ниже) -->
+    <div class="grid grid-cols-2 gap-4" id="catalog"></div>
 
     <!-- Блок корзины (скрыт по умолчанию) -->
     <div id="cart-section" class="mt-6 p-4 rounded-2xl card border border-gray-100 dark:border-gray-800 hidden">
@@ -76,14 +42,54 @@
     </div>
 
     <script>
+        // ==========================================
+        //  НАСТРОЙКА ВАШИХ ТОВАРОВ (АССОРТИМЕНТ)
+        // ==========================================
+        // Вы можете легко менять, добавлять или удалять товары здесь.
+        // Чтобы добавить товар, просто скопируйте строку и измените данные.
+        // Картинки пока стоят стандартные из интернета, вы можете загрузить свои на GitHub и вписать сюда их названия (например: 'tshirt.jpg').
+        const products = [
+            { 
+                name: 'Худи CFR "Classic"', 
+                price: 4500, 
+                img: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=300&auto=format&fit=crop' 
+            },
+            { 
+                name: 'Футболка "Oversize"', 
+                price: 2200, 
+                img: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=300&auto=format&fit=crop' 
+            },
+            { 
+                name: 'Кепка CFR "Base"', 
+                price: 1500, 
+                img: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?q=80&w=300&auto=format&fit=crop' 
+            }
+        ];
+
         // Инициализация Telegram WebApp
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Расширяем приложение на весь экран
+        tg.expand();
 
         let cart = [];
 
+        // Отображение каталога товаров на экране
+        const catalogContainer = document.getElementById('catalog');
+        products.forEach((product, index) => {
+            catalogContainer.innerHTML += `
+                <div class="card p-3 rounded-2xl shadow-sm flex flex-col justify-between border border-gray-100 dark:border-gray-800">
+                    <img src="${product.img}" alt="${product.name}" class="w-full h-32 object-cover rounded-xl mb-2">
+                    <div>
+                        <h3 class="font-semibold text-sm">${product.name}</h3>
+                        <p class="text-sm font-bold mt-1 text-indigo-600 dark:text-indigo-400">${product.price} ₽</p>
+                    </div>
+                    <button onclick="addToCart('${product.name}', ${product.price})" class="w-full mt-3 bg-black text-white py-2 rounded-xl text-xs font-semibold active:scale-95 transition-transform">
+                        В корзину
+                    </button>
+                </div>
+            `;
+        });
+
         function addToCart(name, price) {
-            // Ищем, есть ли товар уже в корзине
             const itemIndex = cart.findIndex(item => item.name === name);
             if (itemIndex > -1) {
                 cart[itemIndex].quantity += 1;
@@ -123,8 +129,8 @@
 
             cartTotalContainer.innerText = `${total} ₽`;
 
-            // Настройка и отображение главной кнопки Telegram для оплаты
-            tg.MainButton.setText(`Оформить заказ (${total} ₽)`);
+            // Показываем главную кнопку Telegram
+            tg.MainButton.setText(`Перейти к оформлению (${total} ₽)`);
             tg.MainButton.show();
         }
 
@@ -136,10 +142,22 @@
             updateCart();
         }
 
-        // Обработка клика по главной кнопке Telegram
+        // Клик по кнопке оформления — перенаправляет в ваш личный чат с готовым текстом
         tg.onEvent('mainButtonClicked', function() {
-            // Отправляем данные корзины обратно в бот
-            tg.sendData(JSON.stringify(cart));
+            // Формируем красивое текстовое сообщение для вас
+            let text = "Привет! Я хочу сделать заказ в CFR Store:\n\n";
+            let total = 0;
+            cart.forEach(item => {
+                text += `• ${item.name} — ${item.quantity} шт. (${item.price * item.quantity} ₽)\n`;
+                total += item.price * item.quantity;
+            });
+            text += `\nИтого к оплате: ${total} ₽`;
+
+            // Кодируем сообщение в формат ссылки
+            let telegramUrl = "https://t.me/abeesalsjkd?text=" + encodeURIComponent(text);
+            
+            // Открываем диалог с вами внутри Telegram
+            tg.openTelegramLink(telegramUrl);
         });
     </script>
 </body>
